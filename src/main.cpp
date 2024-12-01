@@ -13,6 +13,7 @@ GLFWwindow *window;
 // settings
 const unsigned int SCR_WIDTH = 600;
 const unsigned int SCR_HEIGHT = 600;
+int actual = 1;
 unsigned int VBO, VAO, EBO, texture1, texture2;
 int shaderProgram, fragmentShader;
 
@@ -33,10 +34,9 @@ const char *fragmentShaderSource = R"(#version 410 core
                                    layout (location = 1) in vec2 TexCoord;
                                    layout (location = 0) out vec4 FragColor;
                                    uniform sampler2D texture1;
-                                   uniform sampler2D texture2;
                                    void main()
                                    {
-                                   FragColor = texture(texture2, TexCoord) + texture(texture1, TexCoord);
+                                   FragColor = texture(texture1, TexCoord);
                                    })";
 bool loadImage(const char *path, unsigned int &reference, bool transparent = false, bool flip = false)
 {
@@ -61,15 +61,26 @@ bool loadImage(const char *path, unsigned int &reference, bool transparent = fal
     return true;
 }
 
-bool loadTextures()
+bool loadTextures(int actual)
 {
     bool success;
-    success = loadImage("textures/wall.jpg", texture1);
-    success = loadImage("textures/awesomeface.png", texture2, true, true);
+    success = actual == 2 ? loadImage("textures/awesomeface.png", texture1, true, true) : loadImage("textures/container.jpg", texture1);
     glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
     return success;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        std::cout << "Tecla presionada: " << key << std::endl;
+        if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_LEFT) {
+            actual += 1;
+            if (actual == 3) {
+                actual = 1;
+            }
+            loadTextures(actual);
+        }
+    }
 }
 
 bool init()
@@ -92,6 +103,7 @@ bool init()
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Initialize GLEW
@@ -190,7 +202,7 @@ bool init()
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    loadTextures();
+    loadTextures(0);
     return true;
 }
 

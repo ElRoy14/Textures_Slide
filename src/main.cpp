@@ -43,6 +43,8 @@ bool loadImage(const char *path, unsigned int &reference, bool transparent = fal
     glGenTextures(1, &reference);
     glBindTexture(GL_TEXTURE_2D, reference);
 
+    std::cout << path << std::endl;
+
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(flip);
     uint8_t *data = stbi_load(path, &width, &height, &nrChannels, 0);
@@ -64,7 +66,23 @@ bool loadImage(const char *path, unsigned int &reference, bool transparent = fal
 bool loadTextures(int actual)
 {
     bool success;
-    success = actual == 2 ? loadImage("textures/awesomeface.png", texture1, true, true) : loadImage("textures/container.jpg", texture1);
+    std::cout << actual << std::endl;
+    //success = actual == 2 ? loadImage("textures/awesomeface.png", texture1, true, true) : loadImage("textures/container.jpg", texture1);
+    switch(actual)
+    {
+        case 1:
+            loadImage("textures/container.jpg", texture1);
+            break;
+        case 2:
+            loadImage("textures/awesomeface.png", texture1, true, true);
+            break;
+        case 3: 
+            loadImage("textures/wall.jpg", texture1);
+            break;
+        default:
+            break;
+    }
+
     glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
     return success;
@@ -73,10 +91,18 @@ bool loadTextures(int actual)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
         std::cout << "Tecla presionada: " << key << std::endl;
-        if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_LEFT) {
+        if (key == GLFW_KEY_RIGHT) {
             actual += 1;
-            if (actual == 3) {
+            if (actual == 4) {
                 actual = 1;
+            }
+            loadTextures(actual);
+        }
+        else if(key == GLFW_KEY_LEFT)
+        {
+            actual -= 1;
+            if (actual == 0) {
+                actual = 3;
             }
             loadTextures(actual);
         }
@@ -202,7 +228,7 @@ bool init()
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    loadTextures(0);
+    loadTextures(1);
     return true;
 }
 
@@ -224,8 +250,8 @@ void render()
         glUseProgram(shaderProgram);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        //glActiveTexture(GL_TEXTURE1);
+        //glBindTexture(GL_TEXTURE_2D, texture2);
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
